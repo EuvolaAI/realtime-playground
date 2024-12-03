@@ -148,14 +148,14 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
         )
     assistant.start(ctx.room)
     session = model.sessions[0]
-    if config.modalities == ["text", "audio"]:
-        session.conversation.item.create(
-            llm.ChatMessage(
-                role="user",
-                content="Please begin the interaction with the user in a manner consistent with your instructions.",
-            )
-        )
-        session.response.create()
+    # if config.modalities == ["text", "audio"]:
+    #     session.conversation.item.create(
+    #         llm.ChatMessage(
+    #             role="user",
+    #             content="Please begin the interaction with the user in a manner consistent with your instructions.",
+    #         )
+    #     )
+    #     session.response.create()
 
     @ctx.room.local_participant.register_rpc_method("pg.updateConfig")
     async def update_config(

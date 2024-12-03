@@ -10,7 +10,7 @@ upload: build
 	sudo docker push ${image_address}
 	sudo docker rmi ${image_address}
 
-uploadaws: 
+uploadaws: build
 	aws ecr get-login-password --region us-east-1 | sudo docker login --username AWS --password-stdin 014498659012.dkr.ecr.us-east-1.amazonaws.com
 	sudo docker build -t ${image_address_aws} .
 	sudo docker push ${image_address_aws}
