@@ -7,6 +7,7 @@ import uuid
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Literal, Union
 
+import aiohttp
 from livekit import rtc
 from livekit.agents import (
     AutoSubscribe,
@@ -20,6 +21,7 @@ from livekit.agents.multimodal import MultimodalAgent
 from livekit.plugins import openai
 
 from dotenv import load_dotenv
+from typing import Annotated
 
 load_dotenv()
 
@@ -86,6 +88,7 @@ def parse_session_config(data: Dict[str, Any]) -> SessionConfig:
 
 async def entrypoint(ctx: JobContext):
     logger.info(f"connecting to room {ctx.room.name}")
+
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
     participant = await ctx.wait_for_participant()
@@ -96,6 +99,33 @@ async def entrypoint(ctx: JobContext):
 
 
 def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
+    fnc_ctx = llm.FunctionContext()
+    @fnc_ctx.ai_callable(
+            name="name",
+            description="Called when the user asks about his/her name. This function will return the his/her name"
+            )
+    async def get_my_name():
+        url = f"https://test.smartapetech.com/livekit/whoami"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    weather_data = await response.text()
+                    # response from the function call is returned to the LLM
+                    data = json.loads(weather_data)
+                    # response from the function call is returned to the LLM
+                    print(f"weather si {data.get('data').get('Name')}")
+                    return f"{data.get('data').get('Name')}."
+                else:
+                    raise Exception(
+                        f"Failed to get weather data, status code: {response.status}"
+                    )
+    @fnc_ctx.ai_callable(
+            name="myhobby",
+            description="Called when the user asks about his/her hobby. This function will return the  result"
+            )
+    async def get_my_hobby():
+        return f"吃饭,睡觉,打豆豆"
+    
     metadata = json.loads(participant.metadata)
     config = parse_session_config(metadata)
 
@@ -112,7 +142,10 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
         modalities=config.modalities,
         turn_detection=config.turn_detection,
     )
-    assistant = MultimodalAgent(model=model)
+    assistant = MultimodalAgent(
+        model=model,
+        fnc_ctx=fnc_ctx,
+        )
     assistant.start(ctx.room)
     session = model.sessions[0]
     if config.modalities == ["text", "audio"]:
