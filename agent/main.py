@@ -105,7 +105,7 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
     metadata = json.loads(participant.metadata)
     config = parse_session_config(metadata)
 
-    # logger.info(f"starting MultimodalAgent with config: {config.to_dict()}")
+    logger.info(f"starting MultimodalAgent with config: {config.to_dict()}")
     if not config.openai_api_key:
         raise Exception("OpenAI API Key is required")
 
@@ -158,47 +158,47 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
         else:
             return json.dumps({"changed": False})
 
-    @session.on("response_done")
-    def on_response_done(response: openai.realtime.RealtimeResponse):
-        variant: Literal["warning", "destructive"]
-        description: str | None = None
-        title: str
-        if response.status == "incomplete":
-            if response.status_details and response.status_details["reason"]:
-                reason = response.status_details["reason"]
-                if reason == "max_output_tokens":
-                    variant = "warning"
-                    title = "Max output tokens reached"
-                    description = "Response may be incomplete"
-                elif reason == "content_filter":
-                    variant = "warning"
-                    title = "Content filter applied"
-                    description = "Response may be incomplete"
-                else:
-                    variant = "warning"
-                    title = "Response incomplete"
-            else:
-                variant = "warning"
-                title = "Response incomplete"
-        elif response.status == "failed":
-            if response.status_details and response.status_details["error"]:
-                error_code = response.status_details["error"]["code"]
-                if error_code == "server_error":
-                    variant = "destructive"
-                    title = "Server error"
-                elif error_code == "rate_limit_exceeded":
-                    variant = "destructive"
-                    title = "Rate limit exceeded"
-                else:
-                    variant = "destructive"
-                    title = "Response failed"
-            else:
-                variant = "destructive"
-                title = "Response failed"
-        else:
-            return
+    # @session.on("response_done")
+    # def on_response_done(response: openai.realtime.RealtimeResponse):
+    #     variant: Literal["warning", "destructive"]
+    #     description: str | None = None
+    #     title: str
+    #     if response.status == "incomplete":
+    #         if response.status_details and response.status_details["reason"]:
+    #             reason = response.status_details["reason"]
+    #             if reason == "max_output_tokens":
+    #                 variant = "warning"
+    #                 title = "Max output tokens reached"
+    #                 description = "Response may be incomplete"
+    #             elif reason == "content_filter":
+    #                 variant = "warning"
+    #                 title = "Content filter applied"
+    #                 description = "Response may be incomplete"
+    #             else:
+    #                 variant = "warning"
+    #                 title = "Response incomplete"
+    #         else:
+    #             variant = "warning"
+    #             title = "Response incomplete"
+    #     elif response.status == "failed":
+    #         if response.status_details and response.status_details["error"]:
+    #             error_code = response.status_details["error"]["code"]
+    #             if error_code == "server_error":
+    #                 variant = "destructive"
+    #                 title = "Server error"
+    #             elif error_code == "rate_limit_exceeded":
+    #                 variant = "destructive"
+    #                 title = "Rate limit exceeded"
+    #             else:
+    #                 variant = "destructive"
+    #                 title = "Response failed"
+    #         else:
+    #             variant = "destructive"
+    #             title = "Response failed"
+    #     else:
+    #         return
 
-        asyncio.create_task(show_toast(title, description, variant))
+    #     asyncio.create_task(show_toast(title, description, variant))
 
     async def send_transcription(
         ctx: JobContext,
