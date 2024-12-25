@@ -23,6 +23,7 @@ from livekit.plugins import openai
 from dotenv import load_dotenv
 from typing import Annotated
 from function_call import AgentFunc
+import time
 
 load_dotenv()
 
@@ -124,14 +125,16 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
         )
     assistant.start(ctx.room)
     session = model.sessions[0]
-    # if config.modalities == ["text", "audio"]:
-    #     session.conversation.item.create(
-    #         llm.ChatMessage(
-    #             role="user",
-    #             content="Please begin the interaction with the user in a manner consistent with your instructions.",
-    #         )
-    #     )
-    #     session.response.create()
+    if config.modalities == ["text", "audio"]:
+        # 延迟3s,这样客户端能接收完整音频
+        time.sleep(3)
+        session.conversation.item.create(
+            llm.ChatMessage(
+                role="user",
+                content="Please begin the interaction with the user in a manner consistent with your instructions.",
+            )
+        )
+        session.response.create()
 
     @ctx.room.local_participant.register_rpc_method("pg.updateConfig")
     async def update_config(
