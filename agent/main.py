@@ -126,7 +126,7 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
     assistant.start(ctx.room)
     session = model.sessions[0]
     if config.modalities == ["text", "audio"]:
-        # 延迟3s,这样客户端能接收完整音频
+        # 延迟3s,这样客户端能接收完整音频,可以考虑通过client的远程调用实现
         time.sleep(3)
         session.conversation.item.create(
             llm.ChatMessage(

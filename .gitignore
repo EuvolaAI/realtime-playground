@@ -4,3 +4,5 @@ node_modules
 .env
 .env.local
 agent/__pycache__/*
+.pnpm-debug.log
+agent/.venv
